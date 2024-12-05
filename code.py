@@ -4,6 +4,7 @@ from collections import Counter, defaultdict
 
 # Constants
 LOG_FILE = 'sample.log'
+FAILED_LOGIN_THRESHOLD = 10
 CSV_FILE = 'result.csv'
 
 def parse_log_file(file_path):
@@ -28,10 +29,10 @@ def extract_endpoints(lines):
     return endpoint_counts
 
 def detect_suspicious_activity(lines):
-    # Detects IP addresses with failed login attempts
-    failed_login_pattern = re.compile(r'(\d+\.\d+\.\d+\.\d+).*401|Invalid credentials')
+    # Detects IP addresses with excessive failed login attempts.
+    failed_login_pattern = re.compile(r'(\d+\.\d+\.\d+\.\d+).*?(401|Invalid credentials)')
     failed_logins = Counter(failed_login_pattern.search(line).group(1) for line in lines if failed_login_pattern.search(line))
-    return failed_logins  # No threshold applied here
+    return {ip: count for ip, count in failed_logins.items() if count > FAILED_LOGIN_THRESHOLD}
 
 def save_to_csv(ip_requests, most_accessed_endpoint, suspicious_ips):
     # Saves analysis results to a CSV file
